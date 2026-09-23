@@ -1,25 +1,27 @@
-from fastapi import Depends, FastAPI
-from pydantic import BaseModel
+from fastapi import Depends, FastAPI, HTTPException
+from typing import Annotated
+from pydantic import BaseModel, Field
 from sqlmodel import select
-from src.models.product_model import Product
+from src.models.product_model import Product, ProductCategories
 from src.shared.database.session_db import SessionDep, get_session
 
 app = FastAPI()
 
 class CreateProduct(BaseModel):
     name: str
-    price: float
-    quantity: int
-    category: str
+    price: Annotated[float, Field(gt=10000)]
+    quantity: Annotated[int,Field(ge=0)]
+    category: ProductCategories
 
 
 @app.post("/product")
 def create_product(product: CreateProduct, session: SessionDep):
-    product = Product(name = product.name, category= product.category, price=product.price, quantity=product.quantity)
-    session.add(product)
-    session.commit()
-    session.refresh(product)
-
+    if create_product:
+        product = Product(name = product.name, category= product.category, price=product.price, quantity=product.quantity)
+        session.add(product)
+        session.commit()
+        session.refresh(product)
+        raise HTTPException(status_code=201, detail="Product successfully saved")
     return product
 
 @app.get("/product")

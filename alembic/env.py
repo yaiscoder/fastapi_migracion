@@ -9,6 +9,16 @@ from sqlmodel import SQLModel
 # Importar los modelos que se quieren migrar aqui
 from src.models.product_model import Product
 
+import os 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+url_database = os.getenv("Database_url")
+
+config = context.config
+config.set_main_option("sqlalchemy.url", url_database)
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
