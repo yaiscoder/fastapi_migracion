@@ -13,6 +13,11 @@ class CreateProduct(BaseModel):
     quantity: Annotated[int,Field(ge=0)]
     category: ProductCategories
 
+class UpdateProduct(BaseModel):
+    name: str | None = None
+    price: Annotated[float, Field(gt=10000)] | None = None
+    quantity: Annotated[int, Field(ge=0)] | None = None
+    category: ProductCategories | None = None
 
 @app.post("/product")
 def create_product(product: CreateProduct, session: SessionDep):
@@ -23,6 +28,21 @@ def create_product(product: CreateProduct, session: SessionDep):
         session.refresh(product)
         raise HTTPException(status_code=201, detail="Product successfully saved")
     return product
+
+@app.put('/product/{product_id}')
+def update_product(product_id: int, product: UpdateProduct, session: SessionDep):
+    db_product = session.exec(
+        select(Product).where(Product.id == product_id)
+    ).one()
+ 
+    product_data = product.model_dump(exclude_unset=True)
+    for key, value in product_data.items():
+        setattr(db_product, key, value)
+ 
+    session.add(db_product)
+    session.commit()
+    session.refresh(db_product)
+    return db_product
 
 @app.get("/product")
 def get_products(session: SessionDep):
